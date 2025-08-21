@@ -38,8 +38,8 @@ Important tasks—like event invites, invoices, and to-do notes—often live in 
 ##  Setup & Run (Cloud or Local)  
 ### Local:
 ```bash
-git clone ...  
-pip install -r requirements.txt  
-export OPENAI_API_KEY=...  
-export PORTIA_API_KEY=...  
-streamlit run snapact/app.py
+git clone https://github.com/codealpha6393/snap-act.git
+cd snap-act
+
+pip install -r requirements.txt
+
