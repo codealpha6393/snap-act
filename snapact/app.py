@@ -1,49 +1,53 @@
-import os
-from dotenv import load_dotenv
+import io
 import streamlit as st
-from portia import Portia
+from dotenv import load_dotenv
+from PIL import Image
+import pytesseract
+from portia import Config, Portia, DefaultToolRegistry
+from hooks import SafetyHooks
 
-# =============================
-# 🔑 Load API Keys (Hybrid Setup)
-# =============================
-load_dotenv()  # Loads .env file locally (ignored on GitHub if secrets are set)
+load_dotenv(override=True)
+config = Config.from_default()
+portia = Portia(config=config, tools=DefaultToolRegistry(config=config), execution_hooks=SafetyHooks())
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-PORTIA_API_KEY = os.getenv("PORTIA_API_KEY")
+st.set_page_config(page_title="Snap→Act", layout="wide")
+st.title("📸 Snap→Act — Screenshot/Text → Actions")
 
-if not OPENAI_API_KEY or not PORTIA_API_KEY:
-    raise ValueError("❌ API keys missing! Please set them in .env or GitHub Secrets.")
+mode = st.radio("Input mode", ["Text", "Image (OCR)"])
 
-# =============================
-# 🤖 Initialize Portia
-# =============================
-portia = Portia(
-    api_key=PORTIA_API_KEY,
-    model="gpt-4o-mini",   # you can change to "gpt-4.1-mini" or others
-    openai_api_key=OPENAI_API_KEY
-)
+text_input = ""
+if mode == "Text":
+    text_input = st.text_area(
+        "Paste text from screenshot or message",
+        height=160,
+        value="INVITE: Hackathon kickoff on 21 Aug, 10:00 AM, Zoom. Reply to dev@org.com"
+    )
+else:
+    file = st.file_uploader("Upload screenshot (PNG/JPG)", type=["png", "jpg", "jpeg"])
+    if file:
+        image = Image.open(io.BytesIO(file.read()))
+        st.image(image, caption="Uploaded screenshot", use_column_width=True)
+        with st.spinner("Running OCR..."):
+            text_input = pytesseract.image_to_string(image)
+        st.text_area("Extracted text", value=text_input, height=160)
 
-# =============================
-# 🎯 Streamlit UI
-# =============================
-st.set_page_config(page_title="SnapAct - AI Action Planner", page_icon="🤖")
+col1, col2 = st.columns(2)
+with col1:
+    run_plan = st.button("Propose Plan")
+with col2:
+    st.markdown("Actions will pause for approval via Portia clarifications.")
 
-st.title("🤖 SnapAct - AI Powered Action Planner")
-st.markdown("Turn your **natural language ideas** into an **action plan with steps!**")
-
-# Input from user
-task = st.text_area("📝 What do you want to do?", placeholder="e.g. Plan a weekend trip to Goa")
-
-if st.button("✨ Generate Action Plan"):
-    if task.strip() == "":
-        st.warning("⚠️ Please enter a task first.")
-    else:
-        try:
-            with st.spinner("🔮 Thinking..."):
-                plan = portia.run(task)
-
-            st.success("✅ Here’s your AI-generated action plan:")
-            st.write(plan)
-
-        except Exception as e:
-            st.error(f"❌ Oops! Something went wrong: {e}")
+if run_plan and text_input.strip():
+    task = f"""
+    You are Snap→Act. Parse the input and identify type: invite | bill | tasklist | receipt | other.
+    Propose a short, safe plan with steps and clarifications. Do not run tools yet.
+    For invites: create Google Calendar event; draft a polite Gmail reply to sender.
+    For bills: add a calendar reminder; log to Sheet (date, amount, vendor) if available; draft acknowledgement.
+    For tasklist: create tasks in Notion or a Google Sheet; schedule follow ups.
+    For receipts: save to Drive under /SnapAct/Receipts/YYYY/MM and log to Sheet.
+    Always present a clear plan + specific clarifications for any assumptions.
+    Input:\n{text_input}
+    """
+    plan = portia.run(task)
+    st.subheader("Proposed Plan")
+    st.code(str(plan))
