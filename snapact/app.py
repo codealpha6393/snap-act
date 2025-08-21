@@ -6,6 +6,10 @@ import pytesseract
 from portia import Config, Portia, DefaultToolRegistry
 from hooks import SafetyHooks
 
+import os
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+PORTIA_API_KEY = os.environ.get("PORTIA_API_KEY")
+
 load_dotenv(override=True)
 config = Config.from_default()
 portia = Portia(config=config, tools=DefaultToolRegistry(config=config), execution_hooks=SafetyHooks())
