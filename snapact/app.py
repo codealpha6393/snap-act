@@ -1,53 +1,42 @@
-import io
+import os
 import streamlit as st
-from dotenv import load_dotenv
-from PIL import Image
-import pytesseract
-from portia import Config, Portia, DefaultToolRegistry
-from hooks import SafetyHooks
+from groq import Groq
 
-load_dotenv(override=True)
-config = Config.from_default()
-portia = Portia(config=config, tools=DefaultToolRegistry(config=config), execution_hooks=SafetyHooks())
+# Load API Key
+groq_api_key = os.getenv("GROQ_API_KEY")
+if not groq_api_key:
+    st.error("❌ No GROQ_API_KEY found. Please set it in GitHub Secrets or .env file.")
+    st.stop()
 
-st.set_page_config(page_title="Snap→Act", layout="wide")
-st.title("📸 Snap→Act — Screenshot/Text → Actions")
+# Initialize Groq client
+client = Groq(api_key=groq_api_key)
 
-mode = st.radio("Input mode", ["Text", "Image (OCR)"])
+# Streamlit App UI
+st.set_page_config(page_title="Snap Act", layout="centered")
 
-text_input = ""
-if mode == "Text":
-    text_input = st.text_area(
-        "Paste text from screenshot or message",
-        height=160,
-        value="INVITE: Hackathon kickoff on 21 Aug, 10:00 AM, Zoom. Reply to dev@org.com"
-    )
-else:
-    file = st.file_uploader("Upload screenshot (PNG/JPG)", type=["png", "jpg", "jpeg"])
-    if file:
-        image = Image.open(io.BytesIO(file.read()))
-        st.image(image, caption="Uploaded screenshot", use_column_width=True)
-        with st.spinner("Running OCR..."):
-            text_input = pytesseract.image_to_string(image)
-        st.text_area("Extracted text", value=text_input, height=160)
+st.title("📸 Snap Act")
+st.write("Generate **instant action plans** from any situation using AI 🚀")
 
-col1, col2 = st.columns(2)
-with col1:
-    run_plan = st.button("Propose Plan")
-with col2:
-    st.markdown("Actions will pause for approval via Portia clarifications.")
+user_input = st.text_area("Describe your situation:", placeholder="e.g., I missed my project deadline...")
 
-if run_plan and text_input.strip():
-    task = f"""
-    You are Snap→Act. Parse the input and identify type: invite | bill | tasklist | receipt | other.
-    Propose a short, safe plan with steps and clarifications. Do not run tools yet.
-    For invites: create Google Calendar event; draft a polite Gmail reply to sender.
-    For bills: add a calendar reminder; log to Sheet (date, amount, vendor) if available; draft acknowledgement.
-    For tasklist: create tasks in Notion or a Google Sheet; schedule follow ups.
-    For receipts: save to Drive under /SnapAct/Receipts/YYYY/MM and log to Sheet.
-    Always present a clear plan + specific clarifications for any assumptions.
-    Input:\n{text_input}
-    """
-    plan = portia.run(task)
-    st.subheader("Proposed Plan")
-    st.code(str(plan))
+if st.button("Generate Action Plan"):
+    if not user_input.strip():
+        st.warning("⚠️ Please enter a situation before generating a plan.")
+    else:
+        with st.spinner("Thinking..."):
+            try:
+                response = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",  # Free + fast model
+                    messages=[
+                        {"role": "system", "content": "You are SnapAct AI. Provide step-by-step action plans that are clear and easy to follow."},
+                        {"role": "user", "content": user_input}
+                    ],
+                    max_tokens=300
+                )
+
+                plan = response.choices[0].message.content
+                st.subheader("✅ Your Action Plan")
+                st.write(plan)
+
+            except Exception as e:
+                st.error(f"❌ Error: {e}")
