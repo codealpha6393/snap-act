@@ -1,4 +1,5 @@
-streamlit
+portia-sdk-python
 python-dotenv
-portia
-groq
+streamlit
+pytesseract
+Pillow
