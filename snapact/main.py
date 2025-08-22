@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from portia import Config, Portia, DefaultToolRegistry
+from portia_sdk import Config, Portia, DefaultToolRegistry
 from hooks import SafetyHooks
 
 load_dotenv(override=True)
