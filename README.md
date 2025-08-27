@@ -1,45 +1,50 @@
-# Snap→Act — AI that turns screenshots into instant actions
+# 🤖Ai--chat-bot
 
-**One-liner**  
-Snap→Act transforms your screenshot into real actions: extract info, propose a plan, approve, and let Portia execute (like adding events, drafting emails, reminders).
-
----
-
-##  Problem  
-Important tasks—like event invites, invoices, and to-do notes—often live in screenshots. Copying details manually wastes time.
+A chatbot powered by **Groq**, **Portia SDK**, and **Streamlit** that delivers intelligent conversational assistance through both a terminal and a web interface.
 
 ---
 
-##  Solution  
-1. Upload a screenshot or paste text  
-2. OCR → extract actionable items  
-3. Portia plans tasks with clarifications (safe-by-design)  
-4. You approve → tasks execute in Calendar, Gmail, Drive, etc.
+## 🚀 Features
+
+- **Groq-powered responses** for advanced natural language understanding and generation.  
+- **Portia SDK integration** for safe, structured planning and execution of user requests.  
+- **Streamlit Web UI** for an interactive, browser-based chatbot experience.  
+- Lightweight and easy to set up.  
+- Modular codebase that can be extended with new features.  
 
 ---
 
-##  Demo  
-1. Drag-and-drop a screenshot of an event or bill.  
-2. Click *Propose Plan*.  
-3. Review the plan, approve it.  
-4. Actions play out (e.g., new Calendar event, draft email).  
-*(Add a GIF or screenshots here later!)*
+## 🛠️ Technology Stack
+
+- **Groq** – generative AI for natural language processing.  
+- **Portia SDK** – for safe structured planning and task execution.  
+- **Python** – core language for bot logic.  
+- **Streamlit** – for a user-friendly web-based interface.  
 
 ---
 
-##  Tech Stack  
-- **Portia SDK** — structured planning + safe execution  
-- **Streamlit** — quick UI  
-- **Tesseract OCR** — image to text  
-- Google APIs (Calendar, Gmail, Drive)
+## 📦 Installation & Setup
 
----
-
-##  Setup & Run (Cloud or Local)  
-### Local:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/codealpha6393/Ai--chat-bot.git
+   cd Ai--chat-bot
+   ```
+2. Install dependencies:
 ```bash
-git clone https://github.com/codealpha6393/snap-act.git
-cd snap-act
-
 pip install -r requirements.txt
+```
+3. Create a .env file in the root directory and add your API keys:
+```bash
+GROQ_API_KEY=your_groq_api_key
+PORTIA_API_KEY=your_portia_api_key
+```
+4. Run the chatbot in terminal mode:
+```bash
+python main.py
+```
 
+Or run it in Streamlit web mode:
+```bash
+streamlit run app.py
+```
